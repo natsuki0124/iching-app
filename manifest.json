@@ -1,15 +1,17 @@
 {
   "name": "六爻金錢卦占卜",
   "short_name": "金錢卦",
-  "start_url": ".",
+  "description": "專業的六爻金錢卦占卜工具，支援朱子解卦原則。",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f4f1ea",
-  "theme_color": "#8d6e63",
+  "background_color": "#D4AF37",
+  "theme_color": "#D4AF37",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/235/235861.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "icon.jpg",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
