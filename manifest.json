@@ -1,0 +1,15 @@
+{
+  "name": "六爻金錢卦占卜",
+  "short_name": "金錢卦",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#8d6e63",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/235/235861.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

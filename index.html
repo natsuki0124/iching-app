@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>金錢卦 - 專業解卦版</title>
+    <style>
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: #f4f1ea; color: #3e2723; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 850px; width: 100%; border-top: 5px solid #8d6e63; }
+        .flex-row { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 20px; }
+        .box { background: #fafafa; border: 1px solid #eee; padding: 15px; border-radius: 8px; width: 260px; margin: 10px; }
+        
+        /* 爻象樣式 */
+        .gua-display { display: flex; flex-direction: column-reverse; align-items: center; margin: 15px 0; }
+        .yao { width: 120px; height: 14px; margin: 6px 0; position: relative; transition: 0.3s; }
+        .yang { background: #2c3e50; }
+        .yin { background: transparent; display: flex; justify-content: space-between; }
+        .yin::before, .yin::after { content: ""; width: 46%; height: 100%; background: #2c3e50; }
+        .is-moving { outline: 2px solid #e74c3c; outline-offset: 3px; }
+        .mark { position: absolute; right: -30px; font-weight: bold; color: #e74c3c; top: -2px; }
+
+        /* 按鈕與文字 */
+        .btn { background: #8d6e63; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 5px; }
+        .btn:disabled { background: #ccc; }
+        .instruction-box { background: #fff9c4; padding: 15px; border-left: 5px solid #fbc02d; margin-top: 20px; text-align: left; }
+        h3 { border-bottom: 2px solid #8d6e63; padding-bottom: 5px; }
+    </style>
+</head>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('PWA Service Worker 註冊成功', reg))
+        .catch(err => console.log('註冊失敗', err));
+    });
+  }
+</script>
+<body>
+
+<div class="container">
+    <h2>六爻金錢卦：專業判斷法</h2>
+    <p>依據變爻數量，自動導向正確解法</p>
+
+    <div style="text-align: center;">
+        <button class="btn" id="tossBtn">擲幣 (第 1 次)</button>
+        <button class="btn" style="background:#607d8b;" onclick="location.reload()">重新占卜</button>
+    </div>
+
+    <div class="flex-row">
+        <div class="box" id="origBox" style="display:none;">
+            <h3>本卦</h3>
+            <div id="origGua" class="gua-display"></div>
+        </div>
+        
+        <div class="box" id="changeBox" style="display:none;">
+            <h3>之卦</h3>
+            <div id="changeGua" class="gua-display"></div>
+        </div>
+
+        <div class="box" id="analysisBox" style="display:none; width: 100%;">
+            <h3>解卦核心原則</h3>
+            <div id="ruleText" class="instruction-box"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    let results = []; // 存儲每次的數據
+
+    const tossBtn = document.getElementById('tossBtn');
+
+    tossBtn.addEventListener('click', () => {
+        if (currentStep >= 6) return;
+        
+        currentStep++;
+        const coins = [Math.random() < 0.5, Math.random() < 0.5, Math.random() < 0.5]; // true=正, false=背
+        const headCount = coins.filter(c => c).length;
+        
+        let yaoInfo = {
+            num: currentStep,
+            isOld: false,
+            baseType: "", // yang, yin
+            targetType: ""
+        };
+
+        // 判定
+        if (headCount === 0) { yaoInfo.baseType = "yin"; yaoInfo.targetType = "yang"; yaoInfo.isOld = true; yaoInfo.label="老陰"; }
+        else if (headCount === 1) { yaoInfo.baseType = "yang"; yaoInfo.targetType = "yang"; yaoInfo.isOld = false; yaoInfo.label="少陽"; }
+        else if (headCount === 2) { yaoInfo.baseType = "yin"; yaoInfo.targetType = "yin"; yaoInfo.isOld = false; yaoInfo.label="少陰"; }
+        else { yaoInfo.baseType = "yang"; yaoInfo.targetType = "yin"; yaoInfo.isOld = true; yaoInfo.label="老陽"; }
+
+        results.push(yaoInfo);
+        drawYao('origGua', yaoInfo.baseType, yaoInfo.isOld);
+
+        if (currentStep < 6) {
+            tossBtn.innerText = `擲幣 (第 ${currentStep + 1} 次)`;
+        } else {
+            tossBtn.innerText = "占卜完成";
+            tossBtn.disabled = true;
+            processFinal();
+        }
+    });
+
+    function drawYao(containerId, type, isOld, isFixed = false) {
+        const container = document.getElementById(containerId);
+        document.getElementById(containerId.replace('Gua', 'Box')).style.display = 'block';
+        
+        const yaoDiv = document.createElement('div');
+        yaoDiv.className = `yao ${type} ${isOld && !isFixed ? 'is-moving' : ''}`;
+        if (isOld && !isFixed) {
+            const mark = document.createElement('span');
+            mark.className = 'mark';
+            mark.innerText = type === 'yang' ? '○' : '×';
+            yaoDiv.appendChild(mark);
+        }
+        container.appendChild(yaoDiv);
+    }
+
+    function processFinal() {
+        const movingYaos = results.filter(r => r.isOld);
+        const count = movingYaos.length;
+        const analysisBox = document.getElementById('analysisBox');
+        const ruleText = document.getElementById('ruleText');
+        
+        analysisBox.style.display = 'block';
+        
+        // 繪製之卦
+        if (count > 0) {
+            results.forEach(r => drawYao('changeGua', r.targetType, false, true));
+        }
+
+        // 解卦原則邏輯
+        let advice = `<strong>當前變爻數量：${count} 個</strong><br><hr>`;
+        
+        switch(count) {
+            case 0:
+                advice += "【靜卦】目前事態穩定或處於潛伏期。請以<strong>本卦的「卦辭」</strong>作為主要的判斷基準，觀察大整體的趨勢。";
+                break;
+            case 1:
+                const pos1 = movingYaos[0].num;
+                advice += `【一爻變】核心關鍵在於變動的那一處。請查看<strong>本卦第 ${pos1} 爻（初爻為1）的「爻辭」</strong>，這代表了事情轉變的關鍵點。`;
+                break;
+            case 2:
+                const pos2 = movingYaos.map(m => m.num);
+                advice += `【二爻變】事情有兩個發展變量。請參考本卦的兩個變爻爻辭，並以<strong>位置在上（第 ${Math.max(...pos2)} 爻）的爻辭</strong>為主，下爻為輔。`;
+                break;
+            case 3:
+                advice += "【三爻變】事態面臨重大轉折。請綜合參考<strong>本卦與之卦的「卦辭」</strong>。本卦為「體」（目前的現狀），之卦為「用」（未來的結果），應以<strong>之卦（變卦）</strong>的占論為重。";
+                break;
+            case 4:
+                const unmoving4 = results.filter(r => !r.isOld).map(r => r.num);
+                advice += `【四爻變】變動劇烈，應看趨於穩定的部分。請查看<strong>之卦（變卦）中兩個「不變爻」</strong>的爻辭，並以<strong>位置在下（第 ${Math.min(...unmoving4)} 爻）</strong>的爻辭為主。`;
+                break;
+            case 5:
+                const unmoving5 = results.find(r => !r.isOld).num;
+                advice += `【五爻變】幾乎全盤皆動。請以此時唯一穩定的力量為依託，查看<strong>之卦（變卦）中「唯一不變」的那一爻（第 ${unmoving5} 爻）</strong>之爻辭。`;
+                break;
+            case 6:
+                advice += "【六爻全變】物極必反，局面將徹底改觀。請直接查看<strong>之卦（變卦）的「卦辭」</strong>。若本卦為乾卦或坤卦，則有特殊的「用九」或「用六」辭可參考。";
+                break;
+        }
+        
+        ruleText.innerHTML = advice;
+    }
+</script>
+
+</body>
+</html>
